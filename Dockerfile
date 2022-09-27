@@ -171,10 +171,6 @@ WORKDIR $APP_PATH
 # update composer
 RUN apt-get install -y --force-yes php-curl php-zip
 RUN composer self-update --1
-RUN composer install
-
-# install packages
-RUN npm install
 
 # install highcharts server
 RUN npm install -g phantomjs@2.1.1 --unsafe-perm
