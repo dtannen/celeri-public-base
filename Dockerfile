@@ -185,3 +185,11 @@ RUN apt-get update && \
 # add national font for highcharts
 RUN cp /var/www/html/app/fonts/*.ttf /usr/share/fonts/truetype/
 RUN fc-cache -fv
+
+# install google chrome
+RUN apt-get install -y libappindicator1 fonts-liberation
+RUN apt-get install -f -y
+ARG CHROME_VERSION="91.0.4472.164-1"
+RUN wget --no-verbose -O /tmp/chrome.deb https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${CHROME_VERSION}_amd64.deb \
+  && apt install -y /tmp/chrome.deb \
+  && rm /tmp/chrome.deb
