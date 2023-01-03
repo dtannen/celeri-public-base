@@ -61,46 +61,46 @@ RUN apt-get update
 RUN apt-get install -y --force-yes php-fpm php-cli php-dev php-pgsql php-sqlite3 php-gd \
     php-apcu php-curl php-imap php-mysql php-readline php-common \
     php-mbstring php-xml php-zip
-RUN sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/8.1/cli/php.ini && \
-    sed -i "s/display_errors = .*/display_errors = On/" /etc/php/8.1/cli/php.ini && \
-    sed -i "s/variables_order = .*/variables_order = \"EGPCS\"/" /etc/php/8.1/fpm/php.ini && \
-    sed -i "s/;date.timezone.*/date.timezone = UTC/" /etc/php/8.1/cli/php.ini && \
-    sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/8.1/fpm/php.ini && \
-    sed -i "s/display_errors = .*/display_errors = On/" /etc/php/8.1/fpm/php.ini && \
-    sed -i "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/" /etc/php/8.1/fpm/php.ini && \
-    sed -i "s/upload_max_filesize = .*/upload_max_filesize = 100M/" /etc/php/8.1/fpm/php.ini && \
-    sed -i "s/post_max_size = .*/post_max_size = 100M/" /etc/php/8.1/fpm/php.ini && \
-    sed -i "s/max_execution_time = .*/max_execution_time = 60/" /etc/php/8.1/fpm/php.ini && \
-    sed -i "s/memory_limit = .*/memory_limit = 512M/" /etc/php/8.1/fpm/php.ini && \
-    sed -i "s/;opcache.enable=0*/opcache.enable=1/" /etc/php/8.1/fpm/php.ini && \
-    sed -i "s/;opcache.enable_cli=0*/opcache.enable_cli=1/" /etc/php/8.1/fpm/php.ini && \
-    sed -i "s/;opcache.max_accelerated_files=2000*/opcache.max_accelerated_files=4000/" /etc/php/8.1/fpm/php.ini && \
-    sed -i "s/;opcache.memory_consumption=64*/opcache.memory_consumption=128/" /etc/php/8.1/fpm/php.ini && \
-    sed -i "s/;opcache.revalidate_freq=2*/opcache.revalidate_freq=240/" /etc/php/8.1/fpm/php.ini && \
-    sed -i "s/;date.timezone.*/date.timezone = UTC/" /etc/php/8.1/fpm/php.ini && \
-    sed -i -e "s/;daemonize\s*=\s*yes/daemonize = no/g" /etc/php/8.1/fpm/php-fpm.conf && \
-    sed -i -e "s/;catch_workers_output\s*=\s*yes/catch_workers_output = yes/g" /etc/php/8.1/fpm/pool.d/www.conf && \
-    sed -i -e "s/pm.max_children = 5/pm.max_children = 9/g" /etc/php/8.1/fpm/pool.d/www.conf && \
-    sed -i -e "s/pm.start_servers = 2/pm.start_servers = 3/g" /etc/php/8.1/fpm/pool.d/www.conf && \
-    sed -i -e "s/pm.min_spare_servers = 1/pm.min_spare_servers = 2/g" /etc/php/8.1/fpm/pool.d/www.conf && \
-    sed -i -e "s/pm.max_spare_servers = 3/pm.max_spare_servers = 4/g" /etc/php/8.1/fpm/pool.d/www.conf && \
-    sed -i -e "s/pm.max_requests = 500/pm.max_requests = 200/g" /etc/php/8.1/fpm/pool.d/www.conf && \
-    sed -i -e "s/;listen.mode = 0660/listen.mode = 0750/g" /etc/php/8.1/fpm/pool.d/www.conf && \
-    find /etc/php/8.1/cli/conf.d/ -name "*.ini" -exec sed -i -re 's/^(\s*)#(.*)/\1;\2/g' {} \;
+RUN sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/8.2/cli/php.ini && \
+    sed -i "s/display_errors = .*/display_errors = On/" /etc/php/8.2/cli/php.ini && \
+    sed -i "s/variables_order = .*/variables_order = \"EGPCS\"/" /etc/php/8.2/fpm/php.ini && \
+    sed -i "s/;date.timezone.*/date.timezone = UTC/" /etc/php/8.2/cli/php.ini && \
+    sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/8.2/fpm/php.ini && \
+    sed -i "s/display_errors = .*/display_errors = On/" /etc/php/8.2/fpm/php.ini && \
+    sed -i "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/" /etc/php/8.2/fpm/php.ini && \
+    sed -i "s/upload_max_filesize = .*/upload_max_filesize = 100M/" /etc/php/8.2/fpm/php.ini && \
+    sed -i "s/post_max_size = .*/post_max_size = 100M/" /etc/php/8.2/fpm/php.ini && \
+    sed -i "s/max_execution_time = .*/max_execution_time = 60/" /etc/php/8.2/fpm/php.ini && \
+    sed -i "s/memory_limit = .*/memory_limit = 512M/" /etc/php/8.2/fpm/php.ini && \
+    sed -i "s/;opcache.enable=0*/opcache.enable=1/" /etc/php/8.2/fpm/php.ini && \
+    sed -i "s/;opcache.enable_cli=0*/opcache.enable_cli=1/" /etc/php/8.2/fpm/php.ini && \
+    sed -i "s/;opcache.max_accelerated_files=2000*/opcache.max_accelerated_files=4000/" /etc/php/8.2/fpm/php.ini && \
+    sed -i "s/;opcache.memory_consumption=64*/opcache.memory_consumption=128/" /etc/php/8.2/fpm/php.ini && \
+    sed -i "s/;opcache.revalidate_freq=2*/opcache.revalidate_freq=240/" /etc/php/8.2/fpm/php.ini && \
+    sed -i "s/;date.timezone.*/date.timezone = UTC/" /etc/php/8.2/fpm/php.ini && \
+    sed -i -e "s/;daemonize\s*=\s*yes/daemonize = no/g" /etc/php/8.2/fpm/php-fpm.conf && \
+    sed -i -e "s/;catch_workers_output\s*=\s*yes/catch_workers_output = yes/g" /etc/php/8.2/fpm/pool.d/www.conf && \
+    sed -i -e "s/pm.max_children = 5/pm.max_children = 9/g" /etc/php/8.2/fpm/pool.d/www.conf && \
+    sed -i -e "s/pm.start_servers = 2/pm.start_servers = 3/g" /etc/php/8.2/fpm/pool.d/www.conf && \
+    sed -i -e "s/pm.min_spare_servers = 1/pm.min_spare_servers = 2/g" /etc/php/8.2/fpm/pool.d/www.conf && \
+    sed -i -e "s/pm.max_spare_servers = 3/pm.max_spare_servers = 4/g" /etc/php/8.2/fpm/pool.d/www.conf && \
+    sed -i -e "s/pm.max_requests = 500/pm.max_requests = 200/g" /etc/php/8.2/fpm/pool.d/www.conf && \
+    sed -i -e "s/;listen.mode = 0660/listen.mode = 0750/g" /etc/php/8.2/fpm/pool.d/www.conf && \
+    find /etc/php/8.2/cli/conf.d/ -name "*.ini" -exec sed -i -re 's/^(\s*)#(.*)/\1;\2/g' {} \;
 COPY fastcgi_params /etc/nginx/
 RUN apt-get install php-pear
 RUN apt-get install php-xml
 RUN yes '' | pecl install -f mcrypt-1.0.4
-RUN bash -c "echo extension=/usr/lib/php/20210902/mcrypt.so > /etc/php/8.1/cli/conf.d/mcrypt.ini"
-RUN bash -c "echo memory_limit = 512M >> /etc/php/8.1/fpm/conf.d/file_size.ini"
-RUN bash -c "echo upload_max_filesize = 100M >> /etc/php/8.1/fpm/conf.d/file_size.ini"
-RUN bash -c "echo post_max_size = 100M >> /etc/php/8.1/fpm/conf.d/file_size.ini"
-RUN bash -c "echo max_execution_time = 300 >> /etc/php/8.1/fpm/conf.d/file_size.ini"
-RUN bash -c "echo opcache.enable=1 >> /etc/php/8.1/fpm/conf.d/file_size.ini"
-RUN bash -c "echo env[AWS_BUCKET] = '\$AWS_VAPOR_BUCKET' >> /etc/php/8.1/fpm/php-fpm.conf"
-RUN bash -c "echo env[AWS_DEFAULT_REGION] = '\$AWS_DEFAULT_REGION' >> /etc/php/8.1/fpm/php-fpm.conf"
-RUN bash -c "echo env[AWS_ACCESS_KEY_ID] = '\$AWS_ACCESS_KEY_ID' >> /etc/php/8.1/fpm/php-fpm.conf"
-RUN bash -c "echo env[AWS_SECRET_ACCESS_KEY] = '\$AWS_SECRET_ACCESS_KEY' >> /etc/php/8.1/fpm/php-fpm.conf"
+RUN bash -c "echo extension=/usr/lib/php/20210902/mcrypt.so > /etc/php/8.2/cli/conf.d/mcrypt.ini"
+RUN bash -c "echo memory_limit = 512M >> /etc/php/8.2/fpm/conf.d/file_size.ini"
+RUN bash -c "echo upload_max_filesize = 100M >> /etc/php/8.2/fpm/conf.d/file_size.ini"
+RUN bash -c "echo post_max_size = 100M >> /etc/php/8.2/fpm/conf.d/file_size.ini"
+RUN bash -c "echo max_execution_time = 300 >> /etc/php/8.2/fpm/conf.d/file_size.ini"
+RUN bash -c "echo opcache.enable=1 >> /etc/php/8.2/fpm/conf.d/file_size.ini"
+RUN bash -c "echo env[AWS_BUCKET] = '\$AWS_VAPOR_BUCKET' >> /etc/php/8.2/fpm/php-fpm.conf"
+RUN bash -c "echo env[AWS_DEFAULT_REGION] = '\$AWS_DEFAULT_REGION' >> /etc/php/8.2/fpm/php-fpm.conf"
+RUN bash -c "echo env[AWS_ACCESS_KEY_ID] = '\$AWS_ACCESS_KEY_ID' >> /etc/php/8.2/fpm/php-fpm.conf"
+RUN bash -c "echo env[AWS_SECRET_ACCESS_KEY] = '\$AWS_SECRET_ACCESS_KEY' >> /etc/php/8.2/fpm/php-fpm.conf"
 RUN phpenmod mcrypt && \
     mkdir -p /run/php/ && chown -Rf www-data.www-data /run/php
 
