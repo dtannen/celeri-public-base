@@ -58,7 +58,7 @@ VOLUME ["/var/log/nginx"]
 
 # install php
 RUN apt-get update
-RUN sudo apt-get install -y php8.2-fpm php8.2-cli php8.2-dev php8.2-pgsql php8.2-sqlite3 php8.2-gd \
+RUN apt-get install -y php8.2-fpm php8.2-cli php8.2-dev php8.2-pgsql php8.2-sqlite3 php8.2-gd \
     php8.2-apcu php8.2-curl php8.2-imap php8.2-mysql php8.2-readline php8.2-common \
     php8.2-mbstring php8.2-xml php8.2-zip
 RUN sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/8.2/cli/php.ini && \
