@@ -14,8 +14,8 @@ RUN apt-get update && \
 
 # install some prerequisites
 RUN apt-get install -y software-properties-common curl build-essential \
-    dos2unix gcc git libmcrypt4 libpcre3-dev memcached make python2.7-dev \
-    python-pip re2c unattended-upgrades whois vim libnotify-bin nano wget \
+    dos2unix gcc git libmcrypt4 libpcre3-dev memcached make \
+    python3-pip re2c unattended-upgrades whois vim libnotify-bin nano wget \
     debconf-utils libmcrypt-dev libreadline-dev awscli poppler-utils
 
 RUN apt-get install -y openssl build-essential xorg libssl-dev
@@ -168,7 +168,7 @@ COPY . $APP_PATH
 WORKDIR $APP_PATH
 
 # update composer
-RUN apt-get install -y --force-yes php-curl php-zip
+RUN apt-get install -y --force-yes php8.2-curl php8.2-zip
 RUN composer self-update
 
 # install highcharts server
