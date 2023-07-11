@@ -31,7 +31,7 @@ RUN apt-get install -y language-pack-en-base
 RUN LC_ALL=en_US.UTF-8 add-apt-repository ppa:ondrej/php -y
 RUN LC_ALL=en_US.UTF-8 apt-add-repository ppa:chris-lea/redis-server -y
 # add some repositories
-RUN curl --silent --location https://deb.nodesource.com/setup_14.x | bash -
+RUN curl --silent --location https://deb.nodesource.com/setup_16.x | bash -
 
 # set the locale
 RUN echo "LC_ALL=en_US.UTF-8" >> /etc/default/locale  && \
@@ -189,6 +189,6 @@ RUN fc-cache -fv
 RUN apt-get install -y libappindicator1 fonts-liberation
 RUN apt-get install -f -y
 ARG CHROME_VERSION="91.0.4472.164-1"
-RUN wget --no-verbose -O /tmp/chrome.deb https://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_${CHROME_VERSION}_amd64.deb \
+RUN wget --no-verbose -O /tmp/chrome.deb http://mirror.cs.uchicago.edu/google-chrome/pool/main/g/google-chrome-stable/google-chrome-stable_91.0.4472.164-1_amd64.deb \
   && apt install -y /tmp/chrome.deb \
   && rm /tmp/chrome.deb
