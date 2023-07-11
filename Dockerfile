@@ -172,7 +172,7 @@ RUN apt-get install -y --force-yes php8.2-curl php8.2-zip
 RUN composer self-update
 
 # install highcharts server
-RUN npm install -g phantomjs@2.1.1 --unsafe-perm
+RUN npm install -g phantomjs-prebuilt@2.1.1 --unsafe-perm
 ENV ACCEPT_HIGHCHARTS_LICENSE yes
 RUN npm install highcharts-export-server -g --unsafe-perm
 
