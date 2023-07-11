@@ -190,6 +190,7 @@ RUN fc-cache -fv
 RUN apt-get install -y libappindicator1 fonts-liberation
 RUN apt-get install -f -y
 ARG CHROME_VERSION="91.0.4472.164-1"
-RUN wget --no-verbose -O /tmp/chrome.deb http://mirror.cs.uchicago.edu/google-chrome/pool/main/g/google-chrome-stable/google-chrome-stable_91.0.4472.164-1_amd64.deb \
+# wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+RUN wget --no-verbose -O /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
   && apt install -y /tmp/chrome.deb \
   && rm /tmp/chrome.deb
