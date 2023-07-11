@@ -171,15 +171,16 @@ WORKDIR $APP_PATH
 RUN apt-get install -y --force-yes php8.2-curl php8.2-zip
 RUN composer self-update
 
-# install highcharts server
-# RUN npm install -g phantomjs-prebuilt@2.1.1 --unsafe-perm
-# ENV ACCEPT_HIGHCHARTS_LICENSE yes
-# RUN npm install highcharts-export-server -g --unsafe-perm
-
 # install puppeteer
 RUN npm install puppeteer --global --unsafe-perm
 RUN apt-get update && \
     apt-get install -y libnss3-dev libasound2
+
+# install highcharts server
+# RUN npm install -g phantomjs-prebuilt@2.1.1 --unsafe-perm
+ENV ACCEPT_HIGHCHARTS_LICENSE yes
+# RUN npm install highcharts-export-server -g --unsafe-perm
+RUN npm install highcharts-export-server@3.0.0-beta.1 -g --unsafe-perm
 
 # add national font for highcharts
 RUN cp /var/www/html/app/fonts/*.ttf /usr/share/fonts/truetype/
