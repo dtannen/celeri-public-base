@@ -194,3 +194,5 @@ ARG CHROME_VERSION="91.0.4472.164-1"
 RUN wget --no-verbose -O /tmp/chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb \
   && apt install -y /tmp/chrome.deb \
   && rm /tmp/chrome.deb
+
+RUN apt-get install -y cron
