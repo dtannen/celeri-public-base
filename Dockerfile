@@ -60,7 +60,7 @@ VOLUME ["/var/log/nginx"]
 RUN apt-get update
 RUN apt-get install -y php8.2-fpm php8.2-cli php8.2-dev php8.2-pgsql php8.2-sqlite3 php8.2-gd \
     php8.2-apcu php8.2-curl php8.2-imap php8.2-mysql php8.2-readline php8.2-common \
-    php8.2-mbstring php-xml php8.2-zip
+    php8.2-mbstring php-xml php8.2-zip php8.2-soap
 RUN sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/8.2/cli/php.ini && \
     sed -i "s/display_errors = .*/display_errors = On/" /etc/php/8.2/cli/php.ini && \
     sed -i "s/variables_order = .*/variables_order = \"EGPCS\"/" /etc/php/8.2/fpm/php.ini && \
