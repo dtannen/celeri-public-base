@@ -31,7 +31,7 @@ RUN apt-get install -y language-pack-en-base
 RUN LC_ALL=en_US.UTF-8 add-apt-repository ppa:ondrej/php -y
 RUN LC_ALL=en_US.UTF-8 apt-add-repository ppa:chris-lea/redis-server -y
 # add some repositories
-RUN curl --silent --location https://deb.nodesource.com/setup_16.x | bash -
+RUN curl --silent --location https://deb.nodesource.com/setup_18.x | bash -
 
 # set the locale
 RUN echo "LC_ALL=en_US.UTF-8" >> /etc/default/locale  && \
