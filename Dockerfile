@@ -89,7 +89,7 @@ RUN sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/8.2/cli/ph
     find /etc/php/8.2/cli/conf.d/ -name "*.ini" -exec sed -i -re 's/^(\s*)#(.*)/\1;\2/g' {} \;
 COPY fastcgi_params /etc/nginx/
 RUN apt-get install -y php-pear php-xml
-RUN yes '' | pecl install -f mcrypt-1.0.6
+RUN yes '' | pecl install -f mcrypt-1.0.7
 RUN bash -c "echo extension=/usr/lib/php/20220829/mcrypt.so > /etc/php/8.2/cli/conf.d/mcrypt.ini"
 RUN bash -c "echo memory_limit = 512M >> /etc/php/8.2/fpm/conf.d/file_size.ini"
 RUN bash -c "echo upload_max_filesize = 100M >> /etc/php/8.2/fpm/conf.d/file_size.ini"
