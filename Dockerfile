@@ -90,6 +90,8 @@ RUN sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/8.2/cli/ph
 COPY fastcgi_params /etc/nginx/
 RUN apt-get install -y php-pear php-xml
 RUN pear update-channels
+RUN pear upgrade --force Archive_Tar
+RUN pear upgrade Console_GetoptPlus
 RUN pear upgrade PEAR
 RUN pear search mcrypt 
 RUN yes '' | pecl install -f mcrypt-1.0.5
