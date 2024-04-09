@@ -90,10 +90,7 @@ RUN sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/8.3/cli/ph
 COPY fastcgi_params /etc/nginx/
 RUN apt-get install -y php-pear php-xml
 RUN yes '' | pecl install -f mcrypt-1.0.7
-RUN yes '' | pecl install -f redis
 RUN bash -c "echo extension=/usr/lib/php/20230831/mcrypt.so > /etc/php/8.3/cli/conf.d/mcrypt.ini"
-RUN bash -c "echo extension=redis.so >> /etc/php/8.3/fpm/php.ini"
-RUN bash -c "echo extension=redis.so >> /etc/php/8.3/cli/php.ini"
 RUN bash -c "echo memory_limit = 512M >> /etc/php/8.3/fpm/conf.d/file_size.ini"
 RUN bash -c "echo upload_max_filesize = 100M >> /etc/php/8.3/fpm/conf.d/file_size.ini"
 RUN bash -c "echo post_max_size = 100M >> /etc/php/8.3/fpm/conf.d/file_size.ini"
@@ -109,6 +106,9 @@ RUN phpenmod mcrypt && \
 # install php-bcmath
 RUN apt-get update && \
     apt-get install -y php-bcmath
+
+# install php-redis
+RUN apt-get install -y php-redis
 
 # install sqlite
 RUN apt-get install -y sqlite3 libsqlite3-dev
@@ -181,9 +181,9 @@ RUN apt-get update && \
 
 # install highcharts server
 # RUN npm install -g phantomjs-prebuilt@2.1.1 --unsafe-perm
-ENV ACCEPT_HIGHCHARTS_LICENSE yes
+# ENV ACCEPT_HIGHCHARTS_LICENSE yes
 # RUN npm install highcharts-export-server -g --unsafe-perm
-RUN npm install highcharts-export-server@3.0.0-beta.1 -g --unsafe-perm
+# RUN npm install highcharts-export-server@3.0.0-beta.1 -g --unsafe-perm
 
 # add national font for highcharts
 RUN cp /var/www/html/app/fonts/*.ttf /usr/share/fonts/truetype/
