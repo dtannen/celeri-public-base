@@ -90,7 +90,10 @@ RUN sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/8.3/cli/ph
 COPY fastcgi_params /etc/nginx/
 RUN apt-get install -y php-pear php-xml
 RUN yes '' | pecl install -f mcrypt-1.0.7
+RUN yes '' | pecl install -f redis
 RUN bash -c "echo extension=/usr/lib/php/20230831/mcrypt.so > /etc/php/8.3/cli/conf.d/mcrypt.ini"
+RUN bash -c "echo extension=redis.so >> /etc/php/8.3/fpm/php.ini"
+RUN bash -c "echo extension=redis.so >> /etc/php/8.3/cli/php.ini"
 RUN bash -c "echo memory_limit = 512M >> /etc/php/8.3/fpm/conf.d/file_size.ini"
 RUN bash -c "echo upload_max_filesize = 100M >> /etc/php/8.3/fpm/conf.d/file_size.ini"
 RUN bash -c "echo post_max_size = 100M >> /etc/php/8.3/fpm/conf.d/file_size.ini"
