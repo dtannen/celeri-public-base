@@ -181,8 +181,8 @@ RUN apt-get update && \
 
 # install highcharts server
 # RUN npm install -g phantomjs-prebuilt@2.1.1 --unsafe-perm
-# ENV ACCEPT_HIGHCHARTS_LICENSE yes
-# RUN npm install highcharts-export-server -g --unsafe-perm
+ENV ACCEPT_HIGHCHARTS_LICENSE yes
+RUN npm install highcharts-export-server -g --unsafe-perm
 # RUN npm install highcharts-export-server@3.0.0-beta.1 -g --unsafe-perm
 
 # add national font for highcharts
