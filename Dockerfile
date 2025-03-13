@@ -61,10 +61,6 @@ RUN apt-get update
 RUN apt-get install -y php8.3-fpm php8.3-cli php8.3-dev php8.3-pgsql php8.3-sqlite3 php8.3-gd \
     php8.3-apcu php8.3-curl php8.3-imap php8.3-mysql php8.3-readline php8.3-common \
     php8.3-mbstring php8.3-xml php8.3-zip php8.3-soap
-RUN apt-get update && apt-get install -y \
-    php8.3-simplexml \
-    php8.3-sqlite3 \
-    php8.3-pdo-sqlite
 RUN sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/8.3/cli/php.ini && \
     sed -i "s/display_errors = .*/display_errors = On/" /etc/php/8.3/cli/php.ini && \
     sed -i "s/variables_order = .*/variables_order = \"EGPCS\"/" /etc/php/8.3/fpm/php.ini && \
