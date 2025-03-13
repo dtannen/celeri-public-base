@@ -88,7 +88,7 @@ RUN sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/8.3/cli/ph
     sed -i -e "s/;listen.mode = 0660/listen.mode = 0750/g" /etc/php/8.3/fpm/pool.d/www.conf && \
     find /etc/php/8.3/cli/conf.d/ -name "*.ini" -exec sed -i -re 's/^(\s*)#(.*)/\1;\2/g' {} \;
 COPY fastcgi_params /etc/nginx/
-RUN apt-get install -y php-pear php-xml
+RUN apt-get update && apt-get install -y php-pear php8.3-xml
 RUN yes '' | pecl install -f mcrypt-1.0.7
 RUN bash -c "echo extension=/usr/lib/php/20230831/mcrypt.so > /etc/php/8.3/cli/conf.d/mcrypt.ini"
 RUN bash -c "echo memory_limit = 512M >> /etc/php/8.3/fpm/conf.d/file_size.ini"
@@ -105,10 +105,10 @@ RUN phpenmod mcrypt && \
 
 # install php-bcmath
 RUN apt-get update && \
-    apt-get install -y php-bcmath
+    apt-get install -y php8.3-bcmath
 
 # install php-redis
-RUN apt-get install -y php-redis
+RUN apt-get update && apt-get install -y php8.3-redis
 
 # install sqlite
 RUN apt-get install -y sqlite3 libsqlite3-dev
@@ -176,7 +176,7 @@ COPY . $APP_PATH
 WORKDIR $APP_PATH
 
 # update composer
-RUN apt-get install -y --force-yes php8.3-curl php8.3-zip
+RUN apt-get update && apt-get install -y --force-yes php8.3-curl php8.3-zip
 RUN composer self-update
 
 # install puppeteer
