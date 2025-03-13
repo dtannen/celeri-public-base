@@ -131,6 +131,11 @@ RUN curl -sS https://getcomposer.org/installer | php && \
     mv composer.phar /usr/local/bin/composer && \
     printf "\nPATH=\"~/.composer/vendor/bin:\$PATH\"\n" | tee -a ~/.bashrc
 
+# Make sure Composer uses PHP 8.3
+RUN update-alternatives --set php /usr/bin/php8.3
+RUN update-alternatives --set phar /usr/bin/phar8.3
+RUN update-alternatives --set phar.phar /usr/bin/phar.phar8.3
+
 # install laravel envoy
 RUN composer global require "laravel/envoy"
 
