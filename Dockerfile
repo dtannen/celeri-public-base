@@ -58,58 +58,61 @@ VOLUME ["/var/log/nginx"]
 
 # install php
 RUN apt-get update
-RUN apt-get install -y php8.4-fpm php8.4-cli php8.4-dev php8.4-pgsql php8.4-sqlite3 php8.4-gd \
-    php8.4-apcu php8.4-curl php8.4-imap php8.4-mysql php8.4-readline php8.4-common \
-    php8.4-mbstring php8.4-xml php8.4-zip php8.4-soap php8.4-simplexml php8.4-pdo-sqlite
-RUN sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/8.4/cli/php.ini && \
-    sed -i "s/display_errors = .*/display_errors = On/" /etc/php/8.4/cli/php.ini && \
-    sed -i "s/variables_order = .*/variables_order = \"EGPCS\"/" /etc/php/8.4/fpm/php.ini && \
-    sed -i "s/;date.timezone.*/date.timezone = UTC/" /etc/php/8.4/cli/php.ini && \
-    sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/8.4/fpm/php.ini && \
-    sed -i "s/display_errors = .*/display_errors = On/" /etc/php/8.4/fpm/php.ini && \
-    sed -i "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/" /etc/php/8.4/fpm/php.ini && \
-    sed -i "s/upload_max_filesize = .*/upload_max_filesize = 100M/" /etc/php/8.4/fpm/php.ini && \
-    sed -i "s/post_max_size = .*/post_max_size = 100M/" /etc/php/8.4/fpm/php.ini && \
-    sed -i "s/max_execution_time = .*/max_execution_time = 60/" /etc/php/8.4/fpm/php.ini && \
-    sed -i "s/memory_limit = .*/memory_limit = 512M/" /etc/php/8.4/fpm/php.ini && \
-    sed -i "s/;opcache.enable=0*/opcache.enable=1/" /etc/php/8.4/fpm/php.ini && \
-    sed -i "s/;opcache.enable_cli=0*/opcache.enable_cli=1/" /etc/php/8.4/fpm/php.ini && \
-    sed -i "s/;opcache.max_accelerated_files=2000*/opcache.max_accelerated_files=4000/" /etc/php/8.4/fpm/php.ini && \
-    sed -i "s/;opcache.memory_consumption=64*/opcache.memory_consumption=128/" /etc/php/8.4/fpm/php.ini && \
-    sed -i "s/;opcache.revalidate_freq=2*/opcache.revalidate_freq=240/" /etc/php/8.4/fpm/php.ini && \
-    sed -i "s/;date.timezone.*/date.timezone = UTC/" /etc/php/8.4/fpm/php.ini && \
-    sed -i -e "s/;daemonize\s*=\s*yes/daemonize = no/g" /etc/php/8.4/fpm/php-fpm.conf && \
-    sed -i -e "s/;catch_workers_output\s*=\s*yes/catch_workers_output = yes/g" /etc/php/8.4/fpm/pool.d/www.conf && \
-    sed -i -e "s/pm.max_children = 5/pm.max_children = 75/g" /etc/php/8.4/fpm/pool.d/www.conf && \
-    sed -i -e "s/pm.start_servers = 2/pm.start_servers = 15/g" /etc/php/8.4/fpm/pool.d/www.conf && \
-    sed -i -e "s/pm.min_spare_servers = 1/pm.min_spare_servers = 10/g" /etc/php/8.4/fpm/pool.d/www.conf && \
-    sed -i -e "s/pm.max_spare_servers = 3/pm.max_spare_servers = 25/g" /etc/php/8.4/fpm/pool.d/www.conf && \
-    sed -i -e "s/pm.max_requests = 500/pm.max_requests = 200/g" /etc/php/8.4/fpm/pool.d/www.conf && \
-    sed -i -e "s/;listen.mode = 0660/listen.mode = 0750/g" /etc/php/8.4/fpm/pool.d/www.conf && \
-    find /etc/php/8.4/cli/conf.d/ -name "*.ini" -exec sed -i -re 's/^(\s*)#(.*)/\1;\2/g' {} \;
+RUN apt-get install -y php8.3-fpm php8.3-cli php8.3-dev php8.3-pgsql php8.3-sqlite3 php8.3-gd \
+    php8.3-apcu php8.3-curl php8.3-imap php8.3-mysql php8.3-readline php8.3-common \
+    php8.3-mbstring php8.3-xml php8.3-zip php8.3-soap
+RUN apt-get update && apt-get install -y \
+    php8.3-simplexml \
+    php8.3-sqlite3 \
+    php8.3-pdo-sqlite
+RUN sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/8.3/cli/php.ini && \
+    sed -i "s/display_errors = .*/display_errors = On/" /etc/php/8.3/cli/php.ini && \
+    sed -i "s/variables_order = .*/variables_order = \"EGPCS\"/" /etc/php/8.3/fpm/php.ini && \
+    sed -i "s/;date.timezone.*/date.timezone = UTC/" /etc/php/8.3/cli/php.ini && \
+    sed -i "s/error_reporting = .*/error_reporting = E_ALL/" /etc/php/8.3/fpm/php.ini && \
+    sed -i "s/display_errors = .*/display_errors = On/" /etc/php/8.3/fpm/php.ini && \
+    sed -i "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/" /etc/php/8.3/fpm/php.ini && \
+    sed -i "s/upload_max_filesize = .*/upload_max_filesize = 100M/" /etc/php/8.3/fpm/php.ini && \
+    sed -i "s/post_max_size = .*/post_max_size = 100M/" /etc/php/8.3/fpm/php.ini && \
+    sed -i "s/max_execution_time = .*/max_execution_time = 60/" /etc/php/8.3/fpm/php.ini && \
+    sed -i "s/memory_limit = .*/memory_limit = 512M/" /etc/php/8.3/fpm/php.ini && \
+    sed -i "s/;opcache.enable=0*/opcache.enable=1/" /etc/php/8.3/fpm/php.ini && \
+    sed -i "s/;opcache.enable_cli=0*/opcache.enable_cli=1/" /etc/php/8.3/fpm/php.ini && \
+    sed -i "s/;opcache.max_accelerated_files=2000*/opcache.max_accelerated_files=4000/" /etc/php/8.3/fpm/php.ini && \
+    sed -i "s/;opcache.memory_consumption=64*/opcache.memory_consumption=128/" /etc/php/8.3/fpm/php.ini && \
+    sed -i "s/;opcache.revalidate_freq=2*/opcache.revalidate_freq=240/" /etc/php/8.3/fpm/php.ini && \
+    sed -i "s/;date.timezone.*/date.timezone = UTC/" /etc/php/8.3/fpm/php.ini && \
+    sed -i -e "s/;daemonize\s*=\s*yes/daemonize = no/g" /etc/php/8.3/fpm/php-fpm.conf && \
+    sed -i -e "s/;catch_workers_output\s*=\s*yes/catch_workers_output = yes/g" /etc/php/8.3/fpm/pool.d/www.conf && \
+    sed -i -e "s/pm.max_children = 5/pm.max_children = 75/g" /etc/php/8.3/fpm/pool.d/www.conf && \
+    sed -i -e "s/pm.start_servers = 2/pm.start_servers = 15/g" /etc/php/8.3/fpm/pool.d/www.conf && \
+    sed -i -e "s/pm.min_spare_servers = 1/pm.min_spare_servers = 10/g" /etc/php/8.3/fpm/pool.d/www.conf && \
+    sed -i -e "s/pm.max_spare_servers = 3/pm.max_spare_servers = 25/g" /etc/php/8.3/fpm/pool.d/www.conf && \
+    sed -i -e "s/pm.max_requests = 500/pm.max_requests = 200/g" /etc/php/8.3/fpm/pool.d/www.conf && \
+    sed -i -e "s/;listen.mode = 0660/listen.mode = 0750/g" /etc/php/8.3/fpm/pool.d/www.conf && \
+    find /etc/php/8.3/cli/conf.d/ -name "*.ini" -exec sed -i -re 's/^(\s*)#(.*)/\1;\2/g' {} \;
 COPY fastcgi_params /etc/nginx/
 RUN apt-get install -y php-pear php-xml
 RUN yes '' | pecl install -f mcrypt-1.0.7
-# Update the path for the PHP 8.4 extension directory
-RUN bash -c "echo extension=/usr/lib/php/20240201/mcrypt.so > /etc/php/8.4/cli/conf.d/mcrypt.ini"
-RUN bash -c "echo memory_limit = 512M >> /etc/php/8.4/fpm/conf.d/file_size.ini"
-RUN bash -c "echo upload_max_filesize = 100M >> /etc/php/8.4/fpm/conf.d/file_size.ini"
-RUN bash -c "echo post_max_size = 100M >> /etc/php/8.4/fpm/conf.d/file_size.ini"
-RUN bash -c "echo max_execution_time = 300 >> /etc/php/8.4/fpm/conf.d/file_size.ini"
-RUN bash -c "echo opcache.enable=1 >> /etc/php/8.4/fpm/conf.d/file_size.ini"
-RUN bash -c "echo env[AWS_BUCKET] = '\$AWS_VAPOR_BUCKET' >> /etc/php/8.4/fpm/php-fpm.conf"
-RUN bash -c "echo env[AWS_DEFAULT_REGION] = '\$AWS_DEFAULT_REGION' >> /etc/php/8.4/fpm/php-fpm.conf"
-RUN bash -c "echo env[AWS_ACCESS_KEY_ID] = '\$AWS_ACCESS_KEY_ID' >> /etc/php/8.4/fpm/php-fpm.conf"
-RUN bash -c "echo env[AWS_SECRET_ACCESS_KEY] = '\$AWS_SECRET_ACCESS_KEY' >> /etc/php/8.4/fpm/php-fpm.conf"
+RUN bash -c "echo extension=/usr/lib/php/20230831/mcrypt.so > /etc/php/8.3/cli/conf.d/mcrypt.ini"
+RUN bash -c "echo memory_limit = 512M >> /etc/php/8.3/fpm/conf.d/file_size.ini"
+RUN bash -c "echo upload_max_filesize = 100M >> /etc/php/8.3/fpm/conf.d/file_size.ini"
+RUN bash -c "echo post_max_size = 100M >> /etc/php/8.3/fpm/conf.d/file_size.ini"
+RUN bash -c "echo max_execution_time = 300 >> /etc/php/8.3/fpm/conf.d/file_size.ini"
+RUN bash -c "echo opcache.enable=1 >> /etc/php/8.3/fpm/conf.d/file_size.ini"
+RUN bash -c "echo env[AWS_BUCKET] = '\$AWS_VAPOR_BUCKET' >> /etc/php/8.3/fpm/php-fpm.conf"
+RUN bash -c "echo env[AWS_DEFAULT_REGION] = '\$AWS_DEFAULT_REGION' >> /etc/php/8.3/fpm/php-fpm.conf"
+RUN bash -c "echo env[AWS_ACCESS_KEY_ID] = '\$AWS_ACCESS_KEY_ID' >> /etc/php/8.3/fpm/php-fpm.conf"
+RUN bash -c "echo env[AWS_SECRET_ACCESS_KEY] = '\$AWS_SECRET_ACCESS_KEY' >> /etc/php/8.3/fpm/php-fpm.conf"
 RUN phpenmod mcrypt && \
     mkdir -p /run/php/ && chown -Rf www-data.www-data /run/php
 
 # install php-bcmath
 RUN apt-get update && \
-    apt-get install -y php8.4-bcmath
+    apt-get install -y php-bcmath
 
 # install php-redis
-RUN apt-get install -y php8.4-redis
+RUN apt-get install -y php-redis
 
 # install sqlite
 RUN apt-get install -y sqlite3 libsqlite3-dev
@@ -172,7 +175,7 @@ COPY . $APP_PATH
 WORKDIR $APP_PATH
 
 # update composer
-RUN apt-get install -y --force-yes php8.4-curl php8.4-zip
+RUN apt-get install -y --force-yes php8.3-curl php8.3-zip
 RUN composer self-update
 
 # install puppeteer
