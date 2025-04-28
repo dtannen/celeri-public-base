@@ -8,6 +8,8 @@ ENV APP_DOMAIN celerihealth.com
 ENV APP_PATH /var/www/html/app
 ENV DEBIAN_FRONTEND noninteractive
 
+RUN echo 'Acquire::AllowReleaseInfoChange::Label "true";' > /etc/apt/apt.conf.d/99allow-release-info-change
+
 # upgrade the container
 RUN apt-get update && \
     apt-get upgrade -y
