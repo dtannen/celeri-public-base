@@ -1,0 +1,105 @@
+name: Base image
+
+on:
+  push:
+    branches: [main, 'codex/platform-upgrade-2026']
+    paths:
+      - Dockerfile
+      - .dockerignore
+      - .bash_aliases
+      - homestead
+      - fastcgi_params
+      - supervisord.conf
+      - 'fonts/**'
+      - 'scripts/**'
+      - .github/workflows/base-image.yml
+  pull_request:
+    paths:
+      - Dockerfile
+      - .dockerignore
+      - .bash_aliases
+      - homestead
+      - fastcgi_params
+      - supervisord.conf
+      - 'fonts/**'
+      - 'scripts/**'
+      - .github/workflows/base-image.yml
+  schedule:
+    # Refresh OS/PHP packages weekly, then exercise the new base without publishing.
+    - cron: '23 6 * * 1'
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish tested versioned images to celeri/public-base
+        type: boolean
+        default: false
+      refresh:
+        description: Bypass cached install layers to refresh OS/PHP packages
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: base-${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: false
+
+jobs:
+  base:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.3', '8.5']
+    env:
+      LOCAL_IMAGE: celeri/public-base:check-${{ matrix.php }}
+      # Run identifiers preserve distinct versions for security rebuilds of one commit.
+      RELEASE_IMAGE: celeri/public-base:php${{ matrix.php }}-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: docker/setup-buildx-action@v4.4.1
+      - name: Build base
+        uses: docker/build-push-action@v7.4.0
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          push: false
+          pull: true
+          tags: ${{ env.LOCAL_IMAGE }}
+          build-args: PHP_VERSION=${{ matrix.php }}
+          no-cache: ${{ github.event_name == 'schedule' || inputs.refresh == true }}
+          cache-from: type=gha,scope=base-${{ matrix.php }}
+          cache-to: type=gha,mode=max,scope=base-${{ matrix.php }}
+      - name: Check PHP, worker permissions, PDF and chart rendering offline
+        run: |
+          bash -n scripts/smoke-base.sh
+          docker run --rm --platform linux/amd64 --network none \
+            --volume "$PWD/scripts:/checks:ro" --entrypoint bash \
+            "$LOCAL_IMAGE" /checks/smoke-base.sh
+      - name: Log in to Docker Hub for explicitly requested publication
+        if: github.event_name == 'workflow_dispatch' && inputs.publish == true
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          : "${DOCKERHUB_USERNAME:?Set the DOCKERHUB_USERNAME repository secret.}"
+          : "${DOCKERHUB_TOKEN:?Set the DOCKERHUB_TOKEN repository secret.}"
+          printf '%s' "$DOCKERHUB_TOKEN" | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
+      - name: Publish tested image
+        if: github.event_name == 'workflow_dispatch' && inputs.publish == true
+        run: |
+          docker tag "$LOCAL_IMAGE" "$RELEASE_IMAGE"
+          docker push "$RELEASE_IMAGE"
+          digest="$(docker buildx imagetools inspect "$RELEASE_IMAGE" --format '{{.Manifest.Digest}}')"
+          [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
+          {
+            printf '### PHP %s base image\n\n' '${{ matrix.php }}'
+            printf 'Published `%s`\n\n' "$RELEASE_IMAGE"
+            printf 'Application BASE_IMAGE: `celeri/public-base@%s`\n' "$digest"
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Log out of Docker Hub
+        if: always() && github.event_name == 'workflow_dispatch' && inputs.publish == true
+        run: docker logout

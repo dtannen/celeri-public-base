@@ -37,6 +37,8 @@ application report comparisons before releasing an image.
 - Supervisor runs PHP FPM, nginx, Redis, Horizon, and the export server. The
   application entrypoint remains responsible for starting cron and registering
   its scheduler entry, as in the existing deployment.
+- Horizon runs as `www-data` from the application directory, with its home set
+  to application storage. This keeps worker-created files writable by PHP FPM.
 - `display_errors` and `display_startup_errors` are off in CLI and FPM; errors
   remain logged. Uploads remain capped at 100 MB, FPM memory at 512 MB, and
   request execution time at 300 seconds. FPM inherits the container environment.
@@ -58,42 +60,52 @@ application report comparisons before releasing an image.
 ## Local verification
 
 The build checks required PHP extensions, diagnostic settings, FPM/nginx
-configuration and executable versions. These additional commands exercise the
+configuration and executable versions. The smoke script exercises the
 runtime without starting the application, Horizon, Redis, or cron and without
 network access. Run them against both image tags.
 
 ```sh
 docker run --rm --platform linux/amd64 --network none \
-  celeri/public-base:upgrade-php85 php -r '
-    if (!class_exists("SoapClient")) { exit(1); }
-    if (count(imap_rfc822_parse_adrlist("smoke@example.test", "example.test")) !== 1) { exit(1); }
-    $db = new PDO("sqlite::memory:");
-    if ($db->query("SELECT 1")->fetchColumn() != 1) { exit(1); }
-    echo PHP_VERSION, " extensions OK\n";
-  '
-
-docker run --rm --platform linux/amd64 --network none \
-  celeri/public-base:upgrade-php85 node -e '
-    (async () => {
-      const p = require("/usr/lib/node_modules/puppeteer");
-      const browser = await p.launch({args: ["--no-sandbox", "--disable-dev-shm-usage"]});
-      try {
-        const page = await browser.newPage();
-        await page.setContent("<h1 style=\"font-family: National\">Report smoke check</h1>");
-        await page.pdf({path: "/tmp/report.pdf"});
-        if (require("fs").statSync("/tmp/report.pdf").size < 1000) throw Error("Empty PDF");
-      } finally { await browser.close(); }
-    })().catch(error => { console.error(error); process.exit(1); });
-  '
-
-docker run --rm --platform linux/amd64 --network none \
-  celeri/public-base:upgrade-php85 highcharts-export-server \
-  --loadConfig /etc/highcharts-export-server.json \
-  --instr '{"title":{"text":"Chart smoke check"},"series":[{"data":[1,3,2]}]}' \
-  --outfile /tmp/chart.png
+  --volume "$PWD/scripts:/checks:ro" --entrypoint bash \
+  celeri/public-base:upgrade-php85 /checks/smoke-base.sh
 ```
 
 These smoke checks do not establish application compatibility or authorize a
 push/deployment. The platform upgrade plan requires a successful application
 suite, representative PDF/chart comparisons and the normal Dev acceptance
 checks before a production release.
+
+## Independent builds and publishing
+
+The `Base image` GitHub Actions workflow builds and smoke-tests PHP 8.3 and 8.5
+on amd64. Pushes to `main` or `codex/platform-upgrade-2026`, and pull requests,
+run it only when base inputs or its verification files change. It imports and
+exports a separate GitHub Actions layer cache for each PHP version. Tool version
+arguments are declared near their install layers so later tool updates retain
+the preceding OS/PHP cache.
+
+The weekly scheduled run bypasses install caches and pulls the current Ubuntu
+image to exercise current OS/PHP packages. Scheduled workflows run from the
+repository's default branch; this schedule becomes active when the workflow is
+available there. Scheduled, push and pull-request runs **never publish** images.
+
+To publish a tested base intentionally:
+
+1. Configure the base repository secrets `DOCKERHUB_USERNAME` and
+   `DOCKERHUB_TOKEN`, with access to push `celeri/public-base`.
+2. Dispatch `Base image` manually from the reviewed branch with `publish` set
+   to true. Set `refresh` to true when taking current OS/PHP updates rather than
+   reusing the installation cache.
+3. Each PHP variant must pass the offline smoke checks before its tested image
+   is pushed. Tags use `php<version>-<commit>-<run-id>-<attempt>`, so a security
+   rebuild of the same source has its own version. No `latest`, `develop` or
+   production application tags are moved.
+4. Copy the matching `celeri/public-base@sha256:...` reference from the job
+   summary into the application's `BASE_IMAGE` configuration. The application
+   build consumes that published base; application-only changes do not rebuild
+   PHP, Chrome, fonts or the operating system.
+
+This workflow does not deploy the application or change any existing Docker Hub
+autobuild rules. If Docker Hub still builds this repository automatically,
+disable or reconfigure those external rules separately when choosing GitHub
+Actions as the publishing owner; the rules are not stored in this checkout.

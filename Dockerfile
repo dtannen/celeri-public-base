@@ -3,14 +3,6 @@ FROM ubuntu:26.04
 
 LABEL org.opencontainers.image.authors="David Tannenbaum <david@celerihealth.com>"
 
-# The application first uses the 8.3 bridge; 8.5 is the final platform target.
-ARG PHP_VERSION=8.5
-ARG NODE_VERSION=24.21.0
-ARG COMPOSER_VERSION=2.10.3
-ARG PUPPETEER_VERSION=25.11.0
-ARG CHROME_VERSION=153.0.8010.36
-ARG HIGHCHARTS_EXPORT_SERVER_VERSION=6.0.0
-ARG HIGHCHARTS_VERSION=13.0.0
 ARG TARGETARCH
 
 ENV APP_NAME=celeri \
@@ -47,6 +39,10 @@ RUN test "${TARGETARCH}" = amd64 && \
     rm -rf /var/lib/apt/lists/*
 
 # Signed Sury repository for Ubuntu Resolute (including packaged PECL IMAP for 8.5).
+# Introduce version arguments only at the layer that needs them so a later
+# toolchain update can reuse the preceding OS/PHP installation layers.
+# The application first uses the 8.3 bridge; 8.5 is the final platform target.
+ARG PHP_VERSION=8.5
 RUN curl -fsSLo /tmp/debsuryorg-archive-keyring.deb \
         https://packages.sury.org/debsuryorg-archive-keyring.deb && \
     dpkg -i /tmp/debsuryorg-archive-keyring.deb && \
@@ -87,6 +83,7 @@ RUN printf '%s\n' \
     chown www-data:www-data /run/php /var/www/html
 
 # Fixed Node LTS release, checked against the upstream release checksums.
+ARG NODE_VERSION=24.21.0
 RUN curl -fsSLo /tmp/node.tar.xz https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz && \
     curl -fsSLo /tmp/node-SHASUMS256.txt https://nodejs.org/dist/v${NODE_VERSION}/SHASUMS256.txt && \
     awk -v archive="node-v${NODE_VERSION}-linux-x64.tar.xz" '$2 == archive {print $1 "  /tmp/node.tar.xz"}' \
@@ -97,6 +94,7 @@ RUN curl -fsSLo /tmp/node.tar.xz https://nodejs.org/dist/v${NODE_VERSION}/node-v
     rm -rf /tmp/node /tmp/node.tar.xz /tmp/node-SHASUMS256.txt
 
 # Exact Composer release, validated with its published SHA-256 checksum.
+ARG COMPOSER_VERSION=2.10.3
 RUN curl -fsSLo /usr/local/bin/composer https://getcomposer.org/download/${COMPOSER_VERSION}/composer.phar && \
     curl -fsSLo /tmp/composer.sha256sum https://getcomposer.org/download/${COMPOSER_VERSION}/composer.phar.sha256sum && \
     awk '{print $1 "  /usr/local/bin/composer"}' /tmp/composer.sha256sum | sha256sum --check --strict - && \
@@ -104,6 +102,10 @@ RUN curl -fsSLo /usr/local/bin/composer https://getcomposer.org/download/${COMPO
 
 # Matching Chrome for Testing/Puppeteer versions; a shared executable avoids
 # hidden browser downloads under root's home or the application's node_modules.
+ARG PUPPETEER_VERSION=25.11.0
+ARG CHROME_VERSION=153.0.8010.36
+ARG HIGHCHARTS_EXPORT_SERVER_VERSION=6.0.0
+ARG HIGHCHARTS_VERSION=13.0.0
 RUN curl -fsSLo /tmp/chrome.zip \
         https://storage.googleapis.com/chrome-for-testing-public/${CHROME_VERSION}/linux64/chrome-linux64.zip && \
     unzip -q /tmp/chrome.zip -d /opt && \
