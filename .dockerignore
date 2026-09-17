@@ -1,0 +1,8 @@
+**
+!Dockerfile
+!.bash_aliases
+!homestead
+!fastcgi_params
+!supervisord.conf
+!fonts/
+!fonts/*.ttf
