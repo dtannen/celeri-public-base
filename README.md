@@ -9,8 +9,8 @@ supplied by the application image and its environment.
 
 Chrome for Testing is available for Linux amd64, so specify the platform even
 when building on an Apple Silicon machine. The final target defaults to PHP
-8.5; the PHP 8.3 bridge keeps the existing Laravel 10 application on its current
-PHP minor release during the operating-system upgrade.
+8.5, which is the automatic CI target. A manual PHP 8.3 build remains available
+for compatibility work when needed.
 
 ```sh
 docker build --platform linux/amd64 -t celeri/public-base:upgrade-php85 .
@@ -103,7 +103,8 @@ if Scout continues to report them; do not claim an unqualified clean scan.
 The build checks required PHP extensions, diagnostic settings, FPM/nginx
 configuration and executable versions. The smoke script exercises the
 runtime without starting the application, Horizon, Redis, or cron and without
-network access. Run them against both image tags.
+network access. Run them against the PHP 8.5 image used by the application.
+If building PHP 8.3 manually, repeat this command with its image tag.
 
 ```sh
 docker run --rm --platform linux/amd64 --network none \
@@ -118,10 +119,10 @@ checks before a production release.
 
 ## Independent builds and publishing
 
-The `Base image` GitHub Actions workflow builds and smoke-tests PHP 8.3 and 8.5
+The `Base image` GitHub Actions workflow builds and smoke-tests PHP 8.5
 on amd64. Pushes to `main` or `codex/platform-upgrade-2026`, and pull requests,
 run it only when base inputs or its verification files change. It imports and
-exports a separate GitHub Actions layer cache for each PHP version. Tool version
+exports the existing `base-8.5` GitHub Actions layer cache. Tool version
 arguments are declared near their install layers so later tool updates retain
 the preceding OS/PHP cache.
 
@@ -137,8 +138,8 @@ To publish a tested base intentionally:
 2. Dispatch `Base image` manually from the reviewed branch with `publish` set
    to true. Set `refresh` to true when taking current OS/PHP updates rather than
    reusing the installation cache.
-3. Each PHP variant must pass the offline smoke checks before its tested image
-   is pushed. Tags use `php<version>-<commit>-<run-id>-<attempt>`, so a security
+3. PHP 8.5 must pass the offline smoke checks before its tested image
+   is pushed. Tags use `php8.5-<commit>-<run-id>-<attempt>`, so a security
    rebuild of the same source has its own version. No `latest`, `develop` or
    production application tags are moved.
 4. Copy the matching `celeri/public-base@sha256:...` reference from the job

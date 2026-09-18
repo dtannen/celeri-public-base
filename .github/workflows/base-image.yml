@@ -30,7 +30,7 @@ on:
   workflow_dispatch:
     inputs:
       publish:
-        description: Publish tested versioned images to celeri/public-base
+        description: Publish the tested PHP 8.5 image to celeri/public-base
         type: boolean
         default: false
       refresh:
@@ -47,16 +47,14 @@ concurrency:
 
 jobs:
   base:
+    name: base (8.5)
     runs-on: ubuntu-24.04
     timeout-minutes: 60
-    strategy:
-      fail-fast: false
-      matrix:
-        php: ['8.3', '8.5']
     env:
-      LOCAL_IMAGE: celeri/public-base:check-${{ matrix.php }}
+      PHP_VERSION: '8.5'
+      LOCAL_IMAGE: celeri/public-base:check-8.5
       # Run identifiers preserve distinct versions for security rebuilds of one commit.
-      RELEASE_IMAGE: celeri/public-base:php${{ matrix.php }}-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+      RELEASE_IMAGE: celeri/public-base:php8.5-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
     steps:
       - uses: actions/checkout@v7.0.1
       - uses: docker/setup-buildx-action@v4.4.1
@@ -69,10 +67,10 @@ jobs:
           push: false
           pull: true
           tags: ${{ env.LOCAL_IMAGE }}
-          build-args: PHP_VERSION=${{ matrix.php }}
+          build-args: PHP_VERSION=${{ env.PHP_VERSION }}
           no-cache: ${{ github.event_name == 'schedule' || inputs.refresh == true }}
-          cache-from: type=gha,scope=base-${{ matrix.php }}
-          cache-to: type=gha,mode=max,scope=base-${{ matrix.php }}
+          cache-from: type=gha,scope=base-8.5
+          cache-to: type=gha,mode=max,scope=base-8.5
       - name: Check PHP, worker permissions, PDF and chart rendering offline
         run: |
           bash -n scripts/smoke-base.sh
@@ -96,7 +94,7 @@ jobs:
           digest="$(docker buildx imagetools inspect "$RELEASE_IMAGE" --format '{{.Manifest.Digest}}')"
           [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
           {
-            printf '### PHP %s base image\n\n' '${{ matrix.php }}'
+            printf '### PHP %s base image\n\n' "$PHP_VERSION"
             printf 'Published `%s`\n\n' "$RELEASE_IMAGE"
             printf 'Application BASE_IMAGE: `celeri/public-base@%s`\n' "$digest"
           } >> "$GITHUB_STEP_SUMMARY"
