@@ -42,7 +42,9 @@ permissions:
   contents: read
 
 concurrency:
-  group: base-${{ github.workflow }}-${{ github.ref }}-${{ github.event_name }}
+  # Push and manual runs for one branch share a publisher. Do not cancel a push
+  # midway through publication; the helper also rejects superseded commits.
+  group: base-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -55,9 +57,35 @@ jobs:
       LOCAL_IMAGE: celeri/public-base:check-8.5
       # Run identifiers preserve distinct versions for security rebuilds of one commit.
       RELEASE_IMAGE: celeri/public-base:php8.5-${{ github.sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+      USE_BUILD_CLOUD: ${{ github.repository == 'dtannen/celeri-public-base' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule') && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/codex/platform-upgrade-2026') }}
     steps:
       - uses: actions/checkout@v7.0.1
-      - uses: docker/setup-buildx-action@v4.4.1
+      - name: Check publication contract
+        run: python3 scripts/test-publish-tested-base.py
+      - name: Log in for trusted cloud builds
+        if: env.USE_BUILD_CLOUD == 'true'
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Set up trusted cloud builder
+        if: env.USE_BUILD_CLOUD == 'true'
+        uses: docker/setup-buildx-action@v4.4.1
+        with:
+          version: v0.37.0
+          driver: cloud
+          endpoint: ${{ vars.DOCKER_BUILD_CLOUD_BUILDER }}
+      - name: Set up isolated builder for pull requests
+        if: env.USE_BUILD_CLOUD != 'true'
+        uses: docker/setup-buildx-action@v4.4.1
+        with:
+          version: v0.37.0
+      - name: Capture current publication destination
+        if: env.USE_BUILD_CLOUD == 'true' && vars.DOCKERHUB_PUBLISH_ENABLED == 'true' && ((github.event_name == 'push' && github.ref == 'refs/heads/codex/platform-upgrade-2026') || (github.event_name == 'workflow_dispatch' && inputs.publish == true))
+        env:
+          DOCKERHUB_PUBLISH_ENABLED: ${{ vars.DOCKERHUB_PUBLISH_ENABLED }}
+          PUBLISH_REQUESTED: ${{ inputs.publish == true }}
+        run: python3 scripts/publish-tested-base.py --prepare
       - name: Build base
         uses: docker/build-push-action@v7.4.0
         with:
@@ -69,8 +97,15 @@ jobs:
           tags: ${{ env.LOCAL_IMAGE }}
           build-args: PHP_VERSION=${{ env.PHP_VERSION }}
           no-cache: ${{ github.event_name == 'schedule' || inputs.refresh == true }}
-          cache-from: type=gha,scope=base-8.5
-          cache-to: type=gha,mode=max,scope=base-8.5
+          # Cloud builders retain their own cache. Untrusted runs use only the
+          # isolated runner and its branch-scoped GitHub Actions cache.
+          cache-from: ${{ env.USE_BUILD_CLOUD != 'true' && 'type=gha,scope=base-8.5' || '' }}
+          cache-to: ${{ env.USE_BUILD_CLOUD != 'true' && 'type=gha,mode=max,scope=base-8.5' || '' }}
+      - name: Record built image identity before tests
+        run: |
+          image_id=$(docker image inspect "$LOCAL_IMAGE" --format '{{.Id}}')
+          [[ "$image_id" =~ ^sha256:[0-9a-f]{64}$ ]]
+          printf 'TESTED_IMAGE_ID=%s\n' "$image_id" >> "$GITHUB_ENV"
       - name: Check PHP, worker permissions, PDF and chart rendering offline
         run: |
           bash -n scripts/smoke-base.sh
@@ -82,27 +117,11 @@ jobs:
           docker run --rm --platform linux/amd64 --network none \
             --volume "$PWD/scripts:/checks:ro" --entrypoint python3 \
             "$LOCAL_IMAGE" /checks/check-nginx-static-assets.py
-      - name: Log in to Docker Hub for explicitly requested publication
-        if: github.event_name == 'workflow_dispatch' && inputs.publish == true
-        env:
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-        run: |
-          : "${DOCKERHUB_USERNAME:?Set the DOCKERHUB_USERNAME repository secret.}"
-          : "${DOCKERHUB_TOKEN:?Set the DOCKERHUB_TOKEN repository secret.}"
-          printf '%s' "$DOCKERHUB_TOKEN" | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
       - name: Publish tested image
-        if: github.event_name == 'workflow_dispatch' && inputs.publish == true
-        run: |
-          docker tag "$LOCAL_IMAGE" "$RELEASE_IMAGE"
-          docker push "$RELEASE_IMAGE"
-          digest="$(docker buildx imagetools inspect "$RELEASE_IMAGE" --format '{{.Manifest.Digest}}')"
-          [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]]
-          {
-            printf '### PHP %s base image\n\n' "$PHP_VERSION"
-            printf 'Published `%s`\n\n' "$RELEASE_IMAGE"
-            printf 'Application BASE_IMAGE: `celeri/public-base@%s`\n' "$digest"
-          } >> "$GITHUB_STEP_SUMMARY"
-      - name: Log out of Docker Hub
-        if: always() && github.event_name == 'workflow_dispatch' && inputs.publish == true
-        run: docker logout
+        # Disable Docker Hub's matching autobuild rule before enabling this.
+        # Main's existing tag mapping is intentionally untouched.
+        if: env.USE_BUILD_CLOUD == 'true' && vars.DOCKERHUB_PUBLISH_ENABLED == 'true' && ((github.event_name == 'push' && github.ref == 'refs/heads/codex/platform-upgrade-2026') || (github.event_name == 'workflow_dispatch' && inputs.publish == true))
+        env:
+          DOCKERHUB_PUBLISH_ENABLED: ${{ vars.DOCKERHUB_PUBLISH_ENABLED }}
+          PUBLISH_REQUESTED: ${{ inputs.publish == true }}
+        run: python3 scripts/publish-tested-base.py

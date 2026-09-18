@@ -139,33 +139,61 @@ checks before a production release.
 
 The `Base image` GitHub Actions workflow builds and smoke-tests PHP 8.5
 on amd64. Pushes to `main` or `codex/platform-upgrade-2026`, and pull requests,
-run it only when base inputs or its verification files change. It imports and
-exports the existing `base-8.5` GitHub Actions layer cache. Tool version
-arguments are declared near their install layers so later tool updates retain
-the preceding OS/PHP cache.
+run it only when base inputs or its verification files change. Trusted runs
+use Docker Build Cloud's persistent builder, selected by the repository variable
+`DOCKER_BUILD_CLOUD_BUILDER` (`celeri/github-actions`). Buildx is pinned to
+0.37.0, which includes the cloud driver. Pull requests use an isolated local
+builder with the existing `base-8.5` GitHub Actions cache and receive no Docker
+credentials. Tool version arguments are declared near their install layers so
+later tool updates retain the preceding OS/PHP cache.
+
+The cloud build loads its result onto the GitHub runner. Existing offline PHP,
+permissions, security-version, rendering and Nginx checks run against that image.
+Publication tags and pushes the recorded image ID after those checks pass;
+there is no second build. Test changes exist only in disposable containers.
 
 The weekly scheduled run bypasses install caches and pulls the current Ubuntu
 image to exercise current OS/PHP packages. Scheduled workflows run from the
 repository's default branch; this schedule becomes active when the workflow is
-available there. Scheduled, push and pull-request runs **never publish** images.
+available there. Scheduled and pull-request runs **never publish** images.
 
-To publish a tested base intentionally:
+To connect the builder and enable publication:
 
 1. Configure the base repository secrets `DOCKERHUB_USERNAME` and
-   `DOCKERHUB_TOKEN`, with access to push `celeri/public-base`.
-2. Dispatch `Base image` manually from the reviewed branch with `publish` set
-   to true. Set `refresh` to true when taking current OS/PHP updates rather than
-   reusing the installation cache.
-3. PHP 8.5 must pass the offline smoke checks before its tested image
-   is pushed. Tags use `php8.5-<commit>-<run-id>-<attempt>`, so a security
-   rebuild of the same source has its own version. No `latest`, `develop` or
-   production application tags are moved.
-4. Copy the matching `celeri/public-base@sha256:...` reference from the job
-   summary into the application's `BASE_IMAGE` configuration. The application
-   build consumes that published base; application-only changes do not rebuild
-   PHP, Chrome, fonts or the operating system.
+   `DOCKERHUB_TOKEN`, with cloud-builder access and push access to
+   `celeri/public-base`. Set `DOCKER_BUILD_CLOUD_BUILDER` to the authorized
+   organization/builder name.
+2. Disable Docker Hub's corresponding autobuild rule and let any in-flight
+   build finish before setting the repository variable
+   `DOCKERHUB_PUBLISH_ENABLED` to the exact string `true`. Until then, GitHub
+   builds and checks images but never pushes them, including manual runs.
+3. Once enabled, pushes to `codex/platform-upgrade-2026` publish after all checks
+   pass. A manual run on that branch also publishes when `publish` is true.
+   Set `refresh` to true to take current OS/PHP updates instead of reusing the
+   installation cache.
 
-This workflow does not deploy the application or change any existing Docker Hub
-autobuild rules. If Docker Hub still builds this repository automatically,
-disable or reconfigure those external rules separately when choosing GitHub
-Actions as the publishing owner; the rules are not stored in this checkout.
+Published versions use `php8.5-<commit>-<run-id>-<attempt>`, so a security
+rebuild of the same source has its own tag. Upgrade-branch publication also
+updates `celeri/public-base:platform-upgrade` to the same tested image. Manual
+publication from `main` creates only the unique tag; main pushes remain
+check-only because its old tag mapping has not been changed. No `latest`,
+`develop` or production application tags are moved.
+
+Push and manual runs share a branch publication queue. Before publishing, the
+helper checks that the branch still points to the tested commit and that the
+destination tag has not changed since the build began. It repeats those checks
+before promoting the alias to reject superseded runs and detect competing tag
+writes during the build or upload. These checks do not replace disabling and
+draining the old autobuild publisher. An already advanced branch can
+leave a unique tested image without moving the alias. The job summary records
+the published immutable digest and whether the alias was updated.
+
+The application normally pulls `celeri/public-base:platform-upgrade`; its next
+build consumes the new base. Application-only changes do not rebuild PHP,
+Chrome, fonts or the operating system. Publishing a base does not deploy or
+rebuild the application automatically. This workflow does not change external
+Docker Hub autobuild settings.
+
+Run `python3 scripts/test-publish-tested-base.py` for the offline publication
+regressions, including fork/PR/schedule restrictions, stale commits, replaced
+image IDs, registry failures and conflicting destination-tag changes.
