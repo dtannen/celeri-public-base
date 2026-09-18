@@ -64,11 +64,12 @@ RUN curl -fsSLo /tmp/debsuryorg-archive-keyring.deb \
     rm -rf /var/lib/apt/lists/*
 
 # Shared policy for CLI and FPM; never print diagnostics into HTTP/PDF output.
+# Keep OPcache for FPM requests, but not independent long-lived Horizon processes.
 RUN printf '%s\n' \
         'error_reporting = E_ALL' 'display_errors = Off' 'display_startup_errors = Off' \
         'log_errors = On' 'date.timezone = UTC' 'variables_order = "EGPCS"' \
         'cgi.fix_pathinfo = 0' 'upload_max_filesize = 100M' 'post_max_size = 100M' \
-        'memory_limit = 512M' 'opcache.enable = 1' 'opcache.enable_cli = 1' \
+        'memory_limit = 512M' 'opcache.enable = 1' 'opcache.enable_cli = 0' \
         'opcache.max_accelerated_files = 4000' 'opcache.memory_consumption = 128' \
         'opcache.revalidate_freq = 240' \
         > /etc/php/${PHP_VERSION}/mods-available/celeri.ini && \

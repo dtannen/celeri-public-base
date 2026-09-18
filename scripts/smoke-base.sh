@@ -17,6 +17,9 @@ foreach ($required as $extension) {
 if (ini_get('display_errors') || ini_get('display_startup_errors')) {
     throw new RuntimeException('PHP diagnostics must not enter HTTP/PDF output.');
 }
+if (ini_get('opcache.enable_cli') || opcache_get_status(false) !== false) {
+    throw new RuntimeException('CLI OPcache must stay disabled to avoid a private cache per Horizon process.');
+}
 if (!class_exists('SoapClient') || count(imap_rfc822_parse_adrlist('smoke@example.test', 'example.test')) !== 1) {
     throw new RuntimeException('SOAP/IMAP smoke check failed.');
 }
@@ -30,6 +33,11 @@ PHP
 python3 <<'PY'
 import configparser
 import json
+import re
+import subprocess
+
+fpm_info = subprocess.check_output(['celeri-php-fpm', '-i'], text=True)
+assert re.search(r'^opcache\.enable\s+=>\s+On\s+=>\s+On\s*$', fpm_info, re.MULTILINE), 'FPM OPcache must remain enabled'
 
 config = configparser.ConfigParser(interpolation=None)
 config.read('/etc/supervisor/conf.d/supervisord.conf')
