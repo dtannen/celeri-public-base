@@ -77,6 +77,11 @@ jobs:
           docker run --rm --platform linux/amd64 --network none \
             --volume "$PWD/scripts:/checks:ro" --entrypoint bash \
             "$LOCAL_IMAGE" /checks/smoke-base.sh
+      - name: Check static asset caching and compression offline
+        run: |
+          docker run --rm --platform linux/amd64 --network none \
+            --volume "$PWD/scripts:/checks:ro" --entrypoint python3 \
+            "$LOCAL_IMAGE" /checks/check-nginx-static-assets.py
       - name: Log in to Docker Hub for explicitly requested publication
         if: github.event_name == 'workflow_dispatch' && inputs.publish == true
         env:

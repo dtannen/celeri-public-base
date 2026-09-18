@@ -80,6 +80,14 @@ if Scout continues to report them; do not claim an unqualified clean scan.
   its scheduler entry, as in the existing deployment.
 - Horizon runs as `www-data` from the application directory, with its home set
   to application storage. This keeps worker-created files writable by PHP FPM.
+- Published Nova assets under `/nova-static/<64-character lowercase SHA-256>/`
+  are served directly by Nginx with one year of immutable caching. Only the
+  allowed JavaScript, CSS, font, image, source-map and `*.LICENSE.txt` suffixes are served; missing files,
+  invalid generations and other file types return 404 without immutable caching.
+  JavaScript, CSS and SVG use their precompressed `.gz` siblings when supported
+  by the client, with dynamic gzip as a fallback and `Vary: Accept-Encoding`.
+  These locations retain the existing security headers. Application pages, API
+  responses and assets outside the versioned namespace receive no new caching.
 - `display_errors` and `display_startup_errors` are off in CLI and FPM; errors
   remain logged. Uploads remain capped at 100 MB, FPM memory at 512 MB, and
   request execution time at 300 seconds. FPM inherits the container environment.
@@ -110,6 +118,11 @@ OPcache is inactive while FPM OPcache remains enabled, and exercises the
 runtime without starting the application, Horizon, Redis, or cron and without
 network access. Run them against the PHP 8.5 image used by the application.
 If building PHP 8.3 manually, repeat this command with its image tag.
+
+CI also runs `scripts/check-nginx-static-assets.py` inside the base image with
+`--network none`. It starts only Nginx on loopback with a temporary synthetic
+document root and checks compression, MIME types, security and cache headers,
+conditional/range responses, forbidden suffixes and missing-file handling.
 
 ```sh
 docker run --rm --platform linux/amd64 --network none \
