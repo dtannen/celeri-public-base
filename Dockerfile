@@ -93,6 +93,13 @@ RUN curl -fsSLo /tmp/node.tar.xz https://nodejs.org/dist/v${NODE_VERSION}/node-v
     ln -s /usr/local/bin/npm /usr/bin/npm && \
     rm -rf /tmp/node /tmp/node.tar.xz /tmp/node-SHASUMS256.txt
 
+# Node's bundled npm can lag security fixes in its own dependency tree.
+# Replace that installation in place; /usr remains the runtime tools' prefix.
+ARG NPM_VERSION=11.19.1
+RUN npm install --global --prefix /usr/local npm@${NPM_VERSION} && \
+    test "$(npm --version)" = "${NPM_VERSION}" && \
+    npm cache clean --force
+
 # Exact Composer release, validated with its published SHA-256 checksum.
 ARG COMPOSER_VERSION=2.10.3
 RUN curl -fsSLo /usr/local/bin/composer https://getcomposer.org/download/${COMPOSER_VERSION}/composer.phar && \
@@ -130,12 +137,14 @@ COPY homestead /etc/nginx/sites-available/homestead
 COPY fastcgi_params /etc/nginx/fastcgi_params
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY fonts/ /usr/local/share/fonts/celeri/
+COPY scripts/check-security-versions.sh /usr/local/bin/celeri-check-security-versions
 
 RUN rm -f /etc/nginx/sites-enabled/default && \
     ln -s /etc/nginx/sites-available/homestead /etc/nginx/sites-enabled/homestead && \
     sed -i 's/keepalive_timeout 65;/keepalive_timeout 2;/' /etc/nginx/nginx.conf && \
     fc-cache -f && \
     php -r '$required = ["apcu", "bcmath", "curl", "gd", "imap", "intl", "mbstring", "mysqli", "pdo_mysql", "pdo_pgsql", "pdo_sqlite", "redis", "soap", "xml", "zip", "Zend OPcache"]; foreach ($required as $extension) { if (!extension_loaded($extension)) { fwrite(STDERR, "Missing extension: $extension\n"); exit(1); } } if (ini_get("display_errors")) { exit(1); }' && \
+    bash /usr/local/bin/celeri-check-security-versions && \
     celeri-php-fpm --test && nginx -t && \
     node --version && composer --version && google-chrome --version
 

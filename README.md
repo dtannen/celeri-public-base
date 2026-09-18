@@ -25,12 +25,53 @@ needed to switch between them. PHP packages come from the signed
 IMAP package for PHP 8.5. Apt packages receive current security updates when the
 image is rebuilt; release images should be recorded by immutable digest.
 
-The Dockerfile pins Node 24.21.0, Composer 2.10.3, Puppeteer 25.11.0, Chrome
+The Dockerfile pins Node 24.21.0, npm 11.19.1, Composer 2.10.3, Puppeteer 25.11.0, Chrome
 153.0.8010.36, export server 6.0.0, and Highcharts 13.0.0. Chrome and Puppeteer
 follow the [upstream compatibility table](https://pptr.dev/supported-browsers).
 Node and Composer downloads are verified against upstream checksums. Change
 these build arguments deliberately, then repeat the render checks below and
 application report comparisons before releasing an image.
+
+## September 2026 Scout findings
+
+Node's bundled npm 11.19.0 contains vulnerable versions of `ip-address`,
+`brace-expansion`, and `tar`. The separate npm 11.19.1 pin replaces that copy
+under `/usr/local` with the upstream patched release. It does not change the
+application lockfiles or the `/usr` prefix used by Puppeteer and Highcharts.
+
+The Python findings need the Ubuntu revision, not just the upstream version:
+
+| Package | Minimum Ubuntu 26.04 revision | Addressed findings |
+| --- | --- | --- |
+| python3-urllib3 | 2.6.3-1ubuntu1.1 | CVE-2026-44431, CVE-2026-44432 |
+| python3-pyasn1 | 0.6.3-1ubuntu0.1 | CVE-2026-59884, CVE-2026-59885, CVE-2026-59886 |
+
+Both patched revisions are already installed in the published base digest
+`sha256:01c52cc7f5694a827f3c928f8247865db699af36a5e73be54be4be9faba252d0`.
+Their Python metadata still says `2.6.3` and `0.6.3`, respectively. A PyPI-only
+Scout match therefore does not account for the installed security backports.
+Do not overwrite APT-owned modules with pip packages to change a scanner count.
+
+The build and offline smoke checks enforce these distro revisions, confirm
+that Python imports the distro modules, and check the three actual npm
+dependency versions. The checks reject the previously bundled npm tree.
+
+Evidence: [Ubuntu urllib3 fixes](https://ubuntu.com/security/notices/USN-8379-1),
+[Ubuntu pyasn1 fixes](https://ubuntu.com/security/notices/USN-8712-1), and
+[npm 11.19.1](https://github.com/npm/cli/releases/tag/v11.19.1). The npm update
+addresses CVE-2026-69192 and CVE-2026-54272 (`ip-address`), CVE-2026-69152 and
+CVE-2026-14257 (`brace-expansion`), and CVE-2026-73566 (`tar`).
+
+The local PHP 8.5 rebuild passed the offline PHP, PDF, and chart smoke checks.
+A fresh all-package Scout scan at critical/high/medium severity reported zero
+critical, five high (the Ubuntu-backed Python findings above), and zero medium
+findings. All five npm findings were absent from that scan.
+
+After publishing a new `platform-upgrade` base, rebuild the application image
+with `--pull` and rescan that new image digest. Replacing a base tag does not
+change an application image that has already been built. Record the five
+Ubuntu-backed findings with the package revision and security-notice evidence
+if Scout continues to report them; do not claim an unqualified clean scan.
 
 ## Runtime behavior
 

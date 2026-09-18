@@ -6,3 +6,5 @@
 !supervisord.conf
 !fonts/
 !fonts/*.ttf
+!scripts/
+!scripts/check-security-versions.sh

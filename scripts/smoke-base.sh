@@ -2,6 +2,8 @@
 # Run inside the base image with --network none; no application is required.
 set -euo pipefail
 
+bash "$(dirname "$0")/check-security-versions.sh"
+
 php <<'PHP'
 <?php
 $required = ['apcu', 'bcmath', 'curl', 'gd', 'imap', 'intl', 'mbstring',
