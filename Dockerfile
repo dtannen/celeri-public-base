@@ -140,7 +140,16 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY fonts/ /usr/local/share/fonts/celeri/
 COPY scripts/check-security-versions.sh /usr/local/bin/celeri-check-security-versions
 
-RUN rm -f /etc/nginx/sites-enabled/default && \
+# Chrome launched by FPM needs a writable profile/cache after the worker drops
+# root privileges. Keep runtime policy after the cached toolchain layers.
+RUN printf '%s\n' \
+        'env[HOME] = /var/www/html/app/storage' \
+        'env[XDG_CONFIG_HOME] = /var/www/html/app/storage/.config' \
+        'env[XDG_CACHE_HOME] = /var/www/html/app/storage/.cache' \
+        >> /etc/php/${PHP_VERSION}/fpm/pool.d/zz-celeri.conf && \
+    install -d -m 0750 -o www-data -g www-data ${APP_PATH}/storage && \
+    install -d -m 0700 -o www-data -g www-data ${APP_PATH}/storage/.config ${APP_PATH}/storage/.cache && \
+    rm -f /etc/nginx/sites-enabled/default && \
     ln -s /etc/nginx/sites-available/homestead /etc/nginx/sites-enabled/homestead && \
     sed -i 's/keepalive_timeout 65;/keepalive_timeout 2;/' /etc/nginx/nginx.conf && \
     fc-cache -f && \
