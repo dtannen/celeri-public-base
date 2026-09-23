@@ -91,6 +91,8 @@ if Scout continues to report them; do not claim an unqualified clean scan.
 - `display_errors` and `display_startup_errors` are off in CLI and FPM; errors
   remain logged. Uploads remain capped at 100 MB, FPM memory at 512 MB, and
   request execution time at 300 seconds. FPM inherits the container environment.
+  CLI uses `memory_limit=-1`, preserving the pre-upgrade behavior for Artisan
+  commands and queue workers; the FPM limit is not applied to background imports.
 - OPcache is enabled for FPM and disabled for CLI (`opcache.enable_cli=0`).
   Horizon processes retain their loaded code without a separate OPcache segment
   for every worker, supervisor and master. This restores the pre-upgrade CLI
@@ -114,7 +116,8 @@ if Scout continues to report them; do not claim an unqualified clean scan.
 
 The build checks required PHP extensions, diagnostic settings, FPM/nginx
 configuration and executable versions. The smoke script also asserts CLI
-OPcache is inactive while FPM OPcache remains enabled, and exercises the
+OPcache is inactive while FPM OPcache remains enabled, CLI memory is unlimited
+and FPM memory is capped at 512 MB. It exercises the
 runtime without starting the application, Horizon, Redis, or cron and without
 network access. Run them against the PHP 8.5 image used by the application.
 If building PHP 8.3 manually, repeat this command with its image tag.

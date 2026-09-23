@@ -20,6 +20,9 @@ if (ini_get('display_errors') || ini_get('display_startup_errors')) {
 if (ini_get('opcache.enable_cli') || opcache_get_status(false) !== false) {
     throw new RuntimeException('CLI OPcache must stay disabled to avoid a private cache per Horizon process.');
 }
+if (ini_get('memory_limit') !== '-1') {
+    throw new RuntimeException('CLI must retain the pre-upgrade unlimited PHP memory limit.');
+}
 if (!class_exists('SoapClient') || count(imap_rfc822_parse_adrlist('smoke@example.test', 'example.test')) !== 1) {
     throw new RuntimeException('SOAP/IMAP smoke check failed.');
 }
@@ -41,6 +44,7 @@ import subprocess
 
 fpm_info = subprocess.check_output(['celeri-php-fpm', '-i'], text=True)
 assert re.search(r'^opcache\.enable\s+=>\s+On\s+=>\s+On\s*$', fpm_info, re.MULTILINE), 'FPM OPcache must remain enabled'
+assert re.search(r'^memory_limit\s+=>\s+512M\s+=>\s+512M\s*$', fpm_info, re.MULTILINE), 'FPM must retain its 512M memory limit'
 
 fpm_config = subprocess.check_output(['celeri-php-fpm', '-tt'], stderr=subprocess.STDOUT, text=True)
 runtime_user = pwd.getpwnam('www-data')

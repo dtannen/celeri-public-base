@@ -65,16 +65,18 @@ RUN curl -fsSLo /tmp/debsuryorg-archive-keyring.deb \
 
 # Shared policy for CLI and FPM; never print diagnostics into HTTP/PDF output.
 # Keep OPcache for FPM requests, but not independent long-lived Horizon processes.
+# Preserve the old memory limits separately: CLI unlimited, FPM 512M.
 RUN printf '%s\n' \
         'error_reporting = E_ALL' 'display_errors = Off' 'display_startup_errors = Off' \
         'log_errors = On' 'date.timezone = UTC' 'variables_order = "EGPCS"' \
         'cgi.fix_pathinfo = 0' 'upload_max_filesize = 100M' 'post_max_size = 100M' \
-        'memory_limit = 512M' 'opcache.enable = 1' 'opcache.enable_cli = 0' \
+        'opcache.enable = 1' 'opcache.enable_cli = 0' \
         'opcache.max_accelerated_files = 4000' 'opcache.memory_consumption = 128' \
         'opcache.revalidate_freq = 240' \
         > /etc/php/${PHP_VERSION}/mods-available/celeri.ini && \
     phpenmod -v ${PHP_VERSION} celeri && \
-    printf '%s\n' 'max_execution_time = 300' > /etc/php/${PHP_VERSION}/fpm/conf.d/99-celeri-fpm.ini && \
+    printf '%s\n' 'memory_limit = -1' > /etc/php/${PHP_VERSION}/cli/conf.d/99-celeri-cli.ini && \
+    printf '%s\n' 'memory_limit = 512M' 'max_execution_time = 300' > /etc/php/${PHP_VERSION}/fpm/conf.d/99-celeri-fpm.ini && \
     printf '%s\n' '[www]' 'listen = /run/php/celeri-fpm.sock' \
         'listen.owner = www-data' 'listen.group = www-data' 'listen.mode = 0660' \
         'clear_env = no' 'catch_workers_output = yes' 'pm.max_children = 75' \
